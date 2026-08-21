@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Game Scorekeeper</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      padding: 12px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .round-indicator {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 16px;
+      background: var(--card-bg);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    /* ---------- Setup screen ---------- */
+    .setup-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .setup-card h2 {
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .setup-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .setup-row span {
+      color: var(--text-muted);
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .setup-row input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--danger);
+      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .setup-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-start {
+      background: var(--success);
+      color: #000;
+    }
+
+    .setup-error {
+      color: var(--danger);
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      min-height: 1em;
+    }
+
+    .edit-players-link {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .edit-players-link button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      flex: none;
+      border-radius: 6px;
+    }
+
+    /* ---------- Player cards ---------- */
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .player-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .player-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+    }
+
+    .player-name {
+      font-weight: bold;
+      color: var(--accent);
+      font-size: 1.1rem;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .rename-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      flex: none;
+      padding: 2px 4px;
+    }
+
+    .player-name-row input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      background: #0f172a;
+      color: var(--text);
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .score-summary {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .score-summary span {
+      color: var(--text);
+      font-weight: bold;
+    }
+
+    .input-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+    }
+
+    .input-group input {
+      width: 60px;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-submit {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-submit:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-reset {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      padding: 8px 4px;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #0f172a;
+      color: var(--accent);
+    }
+
+    .positive {
+      color: var(--success);
+    }
+
+    .negative {
+      color: var(--danger);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>9-Round Card Scorekeeper</h1>
+
+  <!-- Setup screen: add/remove/name players before the game starts -->
+  <div class="setup-card" id="setupCard">
+    <h2>Who's playing?</h2>
+    <div id="setupRows"></div>
+    <div class="setup-controls">
+      <button class="btn-start" onclick="startGame()">Start Game</button>
+    </div>
+    <div class="setup-error" id="setupError"></div>
+  </div>
+
+  <div id="gameArea" class="hidden">
+    <div class="edit-players-link">
+      <button onclick="openSetupToRename()">Rename Players</button>
+    </div>
+
+    <div class="round-indicator" id="roundIndicator">Round 1 of 9</div>
+
+    <div class="players-grid" id="playersGrid"></div>
+
+    <div class="actions">
+      <button class="btn-submit" id="actionBtn" onclick="processRound()">Save Round 1 Bids</button>
+      <button class="btn-reset" onclick="resetGame()">Reset Game</button>
+    </div>
+
+    <div class="table-container">
+      <table id="scoreTable">
+        <thead>
+          <tr id="tableHeadRow">
+            <th>Rnd</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "cardScorekeeperState";
+    const NUM_PLAYERS = 4;
+    const DEFAULT_NAMES = ["Player 1", "Player 2", "Player 3", "Player 4"];
+    let players = [];       
+    let currentRound = 1;
+    let stage = 'bids';     // 'bids' or 'tricks'
+    let history = [];       // history[roundIndex][playerIndex] = { bid, tricks, score }
+    let gameStarted = false;
+    // Setup screen 
+    function renderSetupRows(names) {
+      const container = document.getElementById("setupRows");
+      container.innerHTML = "";
+      names.forEach((name, i) => {
+        const row = document.createElement("div");
+        row.className = "setup-row";
+        row.innerHTML = `
+          <span>${i + 1}.</span>
+          <input type="text" class="setup-name-input" data-idx="${i}" value="${escapeAttr(name)}" placeholder="Player name">
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function getSetupNames() {
+      return Array.from(document.querySelectorAll(".setup-name-input")).map(inp => inp.value);
+    }
+
+    function startGame() {
+      const rawNames = getSetupNames().map(n => n.trim());
+      const errorEl = document.getElementById("setupError");
+
+      if (rawNames.length !== NUM_PLAYERS) {
+        errorEl.innerText = `Need exactly ${NUM_PLAYERS} players.`;
+        return;
+      }
+      if (rawNames.some(n => n.length === 0)) {
+        errorEl.innerText = "Every player needs a name.";
+        return;
+      }
+      const lower = rawNames.map(n => n.toLowerCase());
+      if (new Set(lower).size !== lower.length) {
+        errorEl.innerText = "Player names must be unique.";
+        return;
+      }
+
+      errorEl.innerText = "";
+      players = rawNames;
+
+      // Preserve existing history if the player count matches an in-progress game,
+      // otherwise start fresh.
+      if (!gameStarted || history.length === 0 || history[0].length !== players.length) {
+        history = Array.from({ length: 9 }, () => Array(players.length).fill(null));
+        currentRound = 1;
+        stage = 'bids';
+      }
+
+      gameStarted = true;
+      document.getElementById("setupCard").classList.add("hidden");
+      document.getElementById("gameArea").classList.remove("hidden");
+
+      buildTableHead();
+      renderCards();
+      renderTable();
+      saveState();
+    }
+
+    function openSetupToRename() {
+      document.getElementById("setupCard").classList.remove("hidden");
+      document.getElementById("gameArea").classList.add("hidden");
+      renderSetupRows(players.length ? players : DEFAULT_NAMES);
+    }
+
+    function escapeAttr(str) {
+      return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+ function startRename(i) {
+      const nameSpan = document.getElementById(`name-display-${i}`);
+      if (!nameSpan) return;
+      const row = nameSpan.parentElement;
+      row.innerHTML = `<input type="text" id="rename-input-${i}" value="${escapeAttr(players[i])}">`;
+      const input = document.getElementById(`rename-input-${i}`);
+      input.focus();
+      input.select();
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") confirmRename(i);
+        if (e.key === "Escape") { renderCards(); }
+      });
+      input.addEventListener("blur", () => confirmRename(i));
+    }
+
+    function confirmRename(i) {
+      const input = document.getElementById(`rename-input-${i}`);
+      if (!input) return;
+      const newName = input.value.trim();
+      if (newName && !players.some((p, idx) => idx !== i && p.toLowerCase() === newName.toLowerCase())) {
+        players[i] = newName;
+        buildTableHead();
+        saveState();
+      }
+      renderCards();
+      renderTable();
+    }
+
+    // ---------------- Game logic ----------------
+
+    function buildTableHead() {
+      const headRow = document.getElementById("tableHeadRow");
+      headRow.innerHTML = "<th>Rnd</th>";
+      players.forEach(name => {
+        const th = document.createElement("th");
+        th.innerText = name;
+        headRow.appendChild(th);
+      });
+    }
+
+    function renderCards() {
+      const grid = document.getElementById("playersGrid");
+      grid.innerHTML = "";
+
+      players.forEach((name, i) => {
+        const total = getPlayerTotal(i);
+        const card = document.createElement("div");
+        card.className = "player-card";
+
+        let inputsHTML = '';
+        if (stage === 'bids') {
+          inputsHTML = `
+            <div class="input-group">
+              <label>Bid:</label>
+              <input type="number" id="input-${i}" min="1" max="13" value="1">
+            </div>`;
+        } else {
+          const currentBid = history[currentRound - 1][i]?.bid || 0;
+          inputsHTML = `
+            <div class="score-summary">Bid: <span>${currentBid}</span></div>
+            <div class="input-group">
+              <label>Won:</label>
+              <input type="number" id="input-${i}" min="0" max="13" value="${currentBid}">
+            </div>`;
+        }
+
+        card.innerHTML = `
+          <div class="player-name-row">
+            <span class="player-name" id="name-display-${i}" onclick="startRename(${i})">${name}</span>
+            <button class="rename-btn" title="Rename" onclick="startRename(${i})">✎</button>
+          </div>
+          <div class="score-summary">Total: <span>${total.toFixed(1)}</span></div>
+          ${inputsHTML}
+        `;
+        grid.appendChild(card);
+      });
+
+      const btn = document.getElementById("actionBtn");
+      if (currentRound > 9) {
+        document.getElementById("roundIndicator").innerText = "Game Over!";
+        btn.style.display = "none";
+      } else if (stage === 'bids') {
+        document.getElementById("roundIndicator").innerText = `Round ${currentRound} of 9 - Enter Bids`;
+        btn.innerText = `Save Round ${currentRound} Bids`;
+        btn.style.display = "block";
+      } else {
+        document.getElementById("roundIndicator").innerText = `Round ${currentRound} of 9 - Enter Tricks Won`;
+        btn.innerText = `Save Round ${currentRound} Results`;
+        btn.style.display = "block";
+      }
+    }
+
+    function processRound() {
+      if (stage === 'bids') {
+        players.forEach((_, i) => {
+          const val = parseInt(document.getElementById(`input-${i}`).value) || 0;
+          history[currentRound - 1][i] = { bid: val, tricks: 0, score: 0 };
+        });
+        stage = 'tricks';
+      } else {
+        players.forEach((_, i) => {
+          const tricks = parseInt(document.getElementById(`input-${i}`).value) || 0;
+          const bid = history[currentRound - 1][i].bid;
+
+          let score = 0;
+          if (tricks >= bid) {
+            score = bid + (tricks - bid) * 0.1;
+          } else {
+            score = -bid;
+          }
+
+          history[currentRound - 1][i].tricks = tricks;
+          history[currentRound - 1][i].score = score;
+        });
+
+        stage = 'bids';
+        currentRound++;
+      }
+
+      renderCards();
+      renderTable();
+      saveState();
+    }
+
+    function getPlayerTotal(playerIdx) {
+      let total = 0;
+      for (let r = 0; r < 9; r++) {
+        if (history[r][playerIdx] && history[r][playerIdx].score !== undefined) {
+          total += history[r][playerIdx].score;
+        }
+      }
+      return total;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      for (let r = 0; r < 9; r++) {
+        const row = document.createElement("tr");
+        let rowHTML = `<td><strong>R${r + 1}</strong></td>`;
+
+        players.forEach((_, i) => {
+          const data = history[r][i];
+          if (data && data.score !== undefined && (r < currentRound - 1 || (r === currentRound - 1 && stage === 'bids'))) {
+            const scoreClass = data.score > 0 ? 'positive' : (data.score < 0 ? 'negative' : '');
+            rowHTML += `<td>b:${data.bid} w:${data.tricks}<br><span class="${scoreClass}">(${data.score > 0 ? '+' : ''}${data.score.toFixed(1)})</span></td>`;
+          } else if (data && stage === 'tricks' && r === currentRound - 1) {
+            rowHTML += `<td>b:${data.bid}</td>`;
+          } else {
+            rowHTML += `<td>-</td>`;
+          }
+        });
+
+        row.innerHTML = rowHTML;
+        tbody.appendChild(row);
+      }
+
+      // Add Total Row
+      const totalRow = document.createElement("tr");
+      totalRow.style.fontWeight = "bold";
+      totalRow.style.background = "#0f172a";
+      let totalHTML = `<td>Total</td>`;
+      players.forEach((_, i) => {
+        const tot = getPlayerTotal(i);
+        const scoreClass = tot > 0 ? 'positive' : (tot < 0 ? 'negative' : '');
+        totalHTML += `<td class="${scoreClass}">${tot.toFixed(1)}</td>`;
+      });
+      totalRow.innerHTML = totalHTML;
+      tbody.appendChild(totalRow);
+    }
+
+    function resetGame() {
+      if (confirm("Reset the entire game and restart from Round 1?")) {
+        currentRound = 1;
+        stage = 'bids';
+        history = Array.from({ length: 9 }, () => Array(players.length).fill(null));
+        renderCards();
+        renderTable();
+        saveState();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          players, currentRound, stage, history, gameStarted
+        }));
+      } catch (e) {
+        // localStorage unavailable — game still works, just won't survive a refresh
+      }
+    }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const saved = JSON.parse(raw);
+        if (!saved.players || !saved.history) return false;
+        players = saved.players;
+        currentRound = saved.currentRound;
+        stage = saved.stage;
+        history = saved.history;
+        gameStarted = saved.gameStarted;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function init() {
+      const restored = loadState();
+      if (restored && gameStarted && players.length) {
+        document.getElementById("setupCard").classList.add("hidden");
+        document.getElementById("gameArea").classList.remove("hidden");
+        buildTableHead();
+        renderCards();
+        renderTable();
+      } else {
+        renderSetupRows(DEFAULT_NAMES);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
